@@ -1,0 +1,15 @@
+# Requisitos de sistema para rodar o projeto
+# (Este é um projeto Node.js — as dependências do código estão no package.json)
+
+Node.js  >= 18.18.0
+npm      >= 9.0.0
+
+# Para instalar as dependências do projeto:
+#   npm install
+
+# Para rodar em desenvolvimento:
+#   npm run dev
+
+# Para build de produção:
+#   npm run build
+#   npm run start
