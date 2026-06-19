@@ -44,10 +44,7 @@ const schema = z.object({
     'nao_sem_contato',
   ], { error: 'Selecione uma opção' }),
 
-  real_motivo_escala:              escala.optional(),
   real_motivo_desligamento:        z.string().optional(),
-
-  evitaria_saida_escala:           escala.optional(),
   o_que_evitaria_saida:            z.string().optional(),
 
   avaliacao_lideranca:             escala.optional(),
@@ -444,12 +441,12 @@ export default function EntrevistaPage() {
                   <CardHeader className="card-section">
                     <CardTitle className="text-base">Motivo do desligamento</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <PerguntaEscala
-                      id="real_motivo_escala"
-                      justId="real_motivo_desligamento"
-                      texto="1. Na sua opinião, qual é o real motivo do seu desligamento?"
-                      register={register}
+                  <CardContent className="space-y-2">
+                    <p className="text-sm font-medium">1. Na sua opinião, qual é o real motivo do seu desligamento?</p>
+                    <Textarea
+                      placeholder="Descreva o motivo..."
+                      rows={3}
+                      {...register('real_motivo_desligamento')}
                     />
                   </CardContent>
                 </Card>
@@ -459,12 +456,12 @@ export default function EntrevistaPage() {
                   <CardHeader className="card-section">
                     <CardTitle className="text-base">Retenção</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <PerguntaEscala
-                      id="evitaria_saida_escala"
-                      justId="o_que_evitaria_saida"
-                      texto="2. O que poderia ter sido feito para evitar o seu desligamento?"
-                      register={register}
+                  <CardContent className="space-y-2">
+                    <p className="text-sm font-medium">2. O que poderia ter sido feito para evitar o seu desligamento?</p>
+                    <Textarea
+                      placeholder="Descreva o que poderia ter sido feito..."
+                      rows={3}
+                      {...register('o_que_evitaria_saida')}
                     />
                   </CardContent>
                 </Card>

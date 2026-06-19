@@ -26,10 +26,7 @@ const bodySchema = z.object({
   ]),
 
   // Passo 2 — perguntas (opcionais se entrevista não foi realizada)
-  real_motivo_escala:               escala.optional(),
   real_motivo_desligamento:         z.string().optional(),
-
-  evitaria_saida_escala:            escala.optional(),
   o_que_evitaria_saida:             z.string().optional(),
 
   avaliacao_lideranca:              escala.optional(),

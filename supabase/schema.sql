@@ -22,13 +22,11 @@ CREATE TABLE entrevistas_desligamento (
     'nao_sem_contato'
   )),
 
-  -- Passo 2: Motivo do desligamento (Q1)
-  real_motivo_escala       TEXT CHECK (real_motivo_escala    IN ('otimo','bom','regular','ruim')),
+  -- Passo 2: Motivo do desligamento (Q1 — resposta aberta)
   real_motivo_desligamento TEXT,
 
-  -- Passo 2: Retenção (Q2)
-  evitaria_saida_escala TEXT CHECK (evitaria_saida_escala    IN ('otimo','bom','regular','ruim')),
-  o_que_evitaria_saida  TEXT,
+  -- Passo 2: Retenção (Q2 — resposta aberta)
+  o_que_evitaria_saida TEXT,
 
   -- Passo 2: Liderança e relações (Q3-Q5)
   avaliacao_lideranca      TEXT CHECK (avaliacao_lideranca      IN ('otimo','bom','regular','ruim')),
