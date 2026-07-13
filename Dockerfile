@@ -10,6 +10,12 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# DATABASE_URL precisa existir para o módulo postgres.js não lançar erro no build.
+# O valor abaixo é apenas um placeholder — nenhuma conexão é feita durante o build.
+ARG DATABASE_URL=postgresql://build:build@localhost/build
+ENV DATABASE_URL=$DATABASE_URL
+
 RUN npm run build
 
 # ── Etapa 3: imagem de produção (standalone) ──────────────────────────────────
