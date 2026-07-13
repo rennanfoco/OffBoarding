@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import sql from '@/lib/db'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { EntrevistaPDF, type EntrevistaData } from '@/components/EntrevistaPDF'
 import { verificarSessao } from '@/lib/auth'
@@ -14,28 +14,31 @@ export async function GET(
 
   const { id } = await params
 
-  const { data, error } = await supabase
-    .from('entrevistas_desligamento')
-    .select('*')
-    .eq('id', id)
-    .single()
+  try {
+    const [row] = await sql`
+      SELECT * FROM entrevistas_desligamento WHERE id = ${id}
+    `
 
-  if (error || !data) {
-    return NextResponse.json({ error: 'Entrevista não encontrada.' }, { status: 404 })
+    if (!row) {
+      return NextResponse.json({ error: 'Entrevista não encontrada.' }, { status: 404 })
+    }
+
+    const element = React.createElement(EntrevistaPDF, { data: row as EntrevistaData })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const buffer = await renderToBuffer(element as any)
+    const bytes  = new Uint8Array(buffer)
+
+    const nomeArquivo = `entrevista-${row.nome.replace(/\s+/g, '-').toLowerCase()}.pdf`
+
+    return new NextResponse(bytes, {
+      status: 200,
+      headers: {
+        'Content-Type':        'application/pdf',
+        'Content-Disposition': `attachment; filename="${nomeArquivo}"`,
+      },
+    })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Erro interno.'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
-
-  const element = React.createElement(EntrevistaPDF, { data: data as EntrevistaData })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const buffer  = await renderToBuffer(element as any)
-  const bytes   = new Uint8Array(buffer)
-
-  const nomeArquivo = `entrevista-${data.nome.replace(/\s+/g, '-').toLowerCase()}.pdf`
-
-  return new NextResponse(bytes, {
-    status: 200,
-    headers: {
-      'Content-Type':        'application/pdf',
-      'Content-Disposition': `attachment; filename="${nomeArquivo}"`,
-    },
-  })
 }

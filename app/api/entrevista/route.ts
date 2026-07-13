@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import sql from '@/lib/db'
 import { z } from 'zod'
 
 const escala = z.enum(['otimo', 'bom', 'regular', 'ruim'])
@@ -15,9 +15,9 @@ const bodySchema = z.object({
   gestor_imediato: z.string().optional(),
 
   // Passo 1
-  bp_responsavel:         z.string().min(1, 'Selecione o BP responsável'),
-  motivo_saida:           z.string().min(1, 'Selecione o motivo da saída'),
-  entrevista_realizada:   z.enum([
+  bp_responsavel:       z.string().min(1, 'Selecione o BP responsável'),
+  motivo_saida:         z.string().min(1, 'Selecione o motivo da saída'),
+  entrevista_realizada: z.enum([
     'sim_realizada',
     'nao_recusou',
     'nao_decisao_empresa',
@@ -25,10 +25,11 @@ const bodySchema = z.object({
     'nao_sem_contato',
   ]),
 
-  // Passo 2 — perguntas (opcionais se entrevista não foi realizada)
-  real_motivo_desligamento:         z.string().optional(),
-  o_que_evitaria_saida:             z.string().optional(),
+  // Passo 2 — perguntas abertas Q1 e Q2
+  real_motivo_desligamento: z.string().optional(),
+  o_que_evitaria_saida:     z.string().optional(),
 
+  // Passo 2 — escala + justificativa Q3–Q13
   avaliacao_lideranca:              escala.optional(),
   avaliacao_lideranca_just:         z.string().optional(),
   avaliacao_colegas:                escala.optional(),
@@ -57,8 +58,9 @@ const bodySchema = z.object({
   ambiente_trabalho:                escala.optional(),
   ambiente_trabalho_just:           z.string().optional(),
 
-  nps:                              z.number().int().min(0).max(10).optional(),
-  nps_just:                         z.string().optional(),
+  // Q14 — NPS
+  nps:      z.number().int().min(0).max(10).optional(),
+  nps_just: z.string().optional(),
 
   // Passo 3
   parecer_bp: z.string().optional(),
@@ -80,13 +82,11 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { error } = await supabase
-    .from('entrevistas_desligamento')
-    .insert(parsed.data)
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  try {
+    await sql`INSERT INTO entrevistas_desligamento ${sql(parsed.data)}`
+    return NextResponse.json({ ok: true }, { status: 201 })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Erro interno.'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
-
-  return NextResponse.json({ ok: true }, { status: 201 })
 }

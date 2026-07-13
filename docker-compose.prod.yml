@@ -1,0 +1,13 @@
+services:
+
+  app:
+    image: offboarding:latest   # trocar pela imagem publicada no registry
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local              # preencher com as credenciais de produção
+    environment:
+      NODE_ENV: production
+      # DATABASE_URL aponta para o RDS — definir em .env.local:
+      # DATABASE_URL=postgresql://usuario:senha@endpoint.rds.amazonaws.com:5432/offboarding
