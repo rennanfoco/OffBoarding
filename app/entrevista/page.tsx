@@ -76,13 +76,14 @@ const schema = z.object({
   ambiente_trabalho:               escala.optional(),
   ambiente_trabalho_just:          z.string().optional(),
 
-  nps:      z.number().int().min(0).max(10).optional(),
+  nps:      z.coerce.number().int().min(0).max(10).optional(),
   nps_just: z.string().optional(),
 
   parecer_bp: z.string().optional(),
 })
 
-type FormValues = z.infer<typeof schema>
+type FormValues = z.input<typeof schema>
+type FormOutput = z.output<typeof schema>
 type BuscaStatus = 'idle' | 'loading' | 'found' | 'not_found' | 'error'
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -171,7 +172,7 @@ export default function EntrevistaPage() {
     setValue,
     control,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  } = useForm<FormValues, unknown, FormOutput>({ resolver: zodResolver(schema) })
 
   async function buscarCpf(cpf: string) {
     const cpfLimpo = cpf.replace(/\D/g, '')
@@ -233,7 +234,7 @@ export default function EntrevistaPage() {
     return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
   }
 
-  async function onSubmit(data: FormValues) {
+  async function onSubmit(data: FormOutput) {
     setEnviando(true)
     setErroEnvio('')
     const payload = {
@@ -255,6 +256,11 @@ export default function EntrevistaPage() {
     } finally {
       setEnviando(false)
     }
+  }
+
+  function onInvalid() {
+    setErroEnvio('Existem campos obrigatórios não preenchidos ou o CPF não foi encontrado. Verifique os campos destacados no topo do formulário.')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // ── Tela de sucesso ────────────────────────────────────────────────────────
@@ -295,7 +301,13 @@ export default function EntrevistaPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {erroEnvio && (
+            <p className="text-sm text-destructive text-center bg-destructive/10 rounded-md py-2 px-3">
+              {erroEnvio}
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
 
             {/* ── Passo 1: Identificação ──────────────────────────────────── */}
             <Card>
@@ -606,12 +618,12 @@ export default function EntrevistaPage() {
                         14. Em uma escala de 0 a 10, o quanto você recomendaria a Foco como uma boa empresa para se trabalhar?
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {Array.from({ length: 11 }, (_, i) => (
+                        {Array.from({ length: 11 }, (_, i) => 10 - i).map((i) => (
                           <label key={i} className="flex flex-col items-center gap-1 cursor-pointer">
                             <input
                               type="radio"
                               value={i}
-                              {...register('nps', { valueAsNumber: true })}
+                              {...register('nps')}
                               className="accent-primary"
                             />
                             <span className="text-sm font-medium">{i}</span>

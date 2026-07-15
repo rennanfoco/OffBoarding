@@ -59,7 +59,7 @@ const bodySchema = z.object({
   ambiente_trabalho_just:           z.string().optional(),
 
   // Q14 — NPS
-  nps:      z.number().int().min(0).max(10).optional(),
+  nps:      z.coerce.number().int().min(0).max(10).optional(),
   nps_just: z.string().optional(),
 
   // Passo 3
