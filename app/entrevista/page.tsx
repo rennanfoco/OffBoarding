@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { FocoHeader } from '@/components/FocoHeader'
 import { CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
@@ -271,6 +272,9 @@ export default function EntrevistaPage() {
             <p className="text-muted-foreground text-sm">
               A entrevista de desligamento foi salva com sucesso.
             </p>
+            <Button className="w-full" render={<Link href="/" />}>
+              Voltar ao menu
+            </Button>
           </CardContent>
         </Card>
       </main>

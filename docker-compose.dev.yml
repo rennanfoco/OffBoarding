@@ -5,8 +5,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB:       offboarding
-      POSTGRES_USER:     postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER:     offboarding
+      POSTGRES_PASSWORD: offboarding
     ports:
       - "5432:5432"
     volumes:
@@ -27,7 +27,7 @@ services:
     env_file:
       - .env.local
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/offboarding
+      DATABASE_URL: postgresql://offboarding:offboarding@db:5432/offboarding
     depends_on:
       db:
         condition: service_healthy

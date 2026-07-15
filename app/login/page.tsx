@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -9,7 +9,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
-  const router       = useRouter()
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const searchParams = useSearchParams()
   const destino      = searchParams.get('from') ?? '/consulta'
 
@@ -33,7 +40,7 @@ export default function LoginPage() {
         setErro(json.error ?? 'Usuário ou senha incorretos.')
         return
       }
-      router.push(destino)
+      window.location.href = destino
     } finally {
       setEntrando(false)
     }
