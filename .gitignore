@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+__MACOSX/
+
+# claude code
+.claude/settings.local.json
 
 # debug
 npm-debug.log*

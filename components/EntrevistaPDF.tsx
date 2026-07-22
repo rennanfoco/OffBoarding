@@ -23,9 +23,7 @@ export type EntrevistaData = {
   entrevista_realizada: string
   criado_em:         string
 
-  real_motivo_escala?:              string
   real_motivo_desligamento?:        string
-  evitaria_saida_escala?:           string
   o_que_evitaria_saida?:            string
 
   avaliacao_lideranca?:             string
@@ -289,6 +287,23 @@ function Pergunta({
   )
 }
 
+function PerguntaAberta({
+  numero,
+  texto: pergunta,
+  resposta,
+}: {
+  numero: number
+  texto: string
+  resposta?: string
+}) {
+  return (
+    <View style={s.question}>
+      <Text style={s.questionText}>{numero}. {pergunta}</Text>
+      <Text style={s.justValue}>{texto(resposta)}</Text>
+    </View>
+  )
+}
+
 // ─── Documento PDF ────────────────────────────────────────────────────────────
 
 export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
@@ -335,14 +350,14 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
           <>
             <View style={s.section}>
               <Text style={s.sectionTitle}>Motivo do desligamento</Text>
-              <Pergunta numero={1} texto="Na sua opinião, qual é o real motivo do seu desligamento?"
-                escalaVal={data.real_motivo_escala} justificativa={data.real_motivo_desligamento} />
+              <PerguntaAberta numero={1} texto="Na sua opinião, qual é o real motivo do seu desligamento?"
+                resposta={data.real_motivo_desligamento} />
             </View>
 
             <View style={s.section}>
               <Text style={s.sectionTitle}>Retenção</Text>
-              <Pergunta numero={2} texto="O que poderia ter sido feito para evitar o seu desligamento?"
-                escalaVal={data.evitaria_saida_escala} justificativa={data.o_que_evitaria_saida} />
+              <PerguntaAberta numero={2} texto="O que poderia ter sido feito para evitar o seu desligamento?"
+                resposta={data.o_que_evitaria_saida} />
             </View>
 
             <View style={s.section}>

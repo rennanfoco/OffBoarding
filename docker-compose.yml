@@ -1,3 +1,5 @@
+name: offboarding-prod
+
 services:
 
   app:
