@@ -1,3 +1,16 @@
+-- Tabela: usuários com acesso à área de consulta
+-- is_business_partner marca quem pode preencher a entrevista de desligamento
+-- em /entrevista (o nome do BP na entrevista vem direto dessa conta logada).
+CREATE TABLE usuarios (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  usuario TEXT NOT NULL UNIQUE,
+  nome TEXT NOT NULL,
+  senha_hash TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('admin','comum')),
+  is_business_partner BOOLEAN NOT NULL DEFAULT false,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Tabela: entrevistas de desligamento (preenchida pelo BP)
 CREATE TABLE entrevistas_desligamento (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
 import { z } from 'zod'
+import { lerSessao, verificarSessaoBP } from '@/lib/auth'
 
 const escala = z.enum(['otimo', 'bom', 'regular', 'ruim'])
 
@@ -14,8 +15,8 @@ const bodySchema = z.object({
   loja_area:       z.string().optional(),
   gestor_imediato: z.string().optional(),
 
-  // Passo 1
-  bp_responsavel:       z.string().min(1, 'Selecione o BP responsável'),
+  // Passo 1 — bp_responsavel não vem do cliente: é sempre o nome de quem
+  // está logado (ver POST abaixo), pra ninguém conseguir se passar por outro BP.
   motivo_saida:         z.string().min(1, 'Selecione o motivo da saída'),
   entrevista_realizada: z.enum([
     'sim_realizada',
@@ -67,6 +68,11 @@ const bodySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const auth = await verificarSessaoBP(req)
+  if (auth) return auth
+
+  const sessao = await lerSessao(req) // garantido não-nulo pelo guard acima
+
   let body: unknown
   try {
     body = await req.json()
@@ -82,8 +88,10 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const dados = { ...parsed.data, bp_responsavel: sessao!.nome }
+
   try {
-    await sql`INSERT INTO entrevistas_desligamento ${sql(parsed.data)}`
+    await sql`INSERT INTO entrevistas_desligamento ${sql(dados)}`
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Erro interno.'

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FocoHeader } from '@/components/FocoHeader'
+import { AdminNav } from '@/components/AdminNav'
 import { CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -35,7 +36,6 @@ const schema = z.object({
   loja_area:       z.string().optional(),
   gestor_imediato: z.string().optional(),
 
-  bp_responsavel:       z.string().min(1, 'Selecione o BP responsável'),
   motivo_saida:         z.string().min(1, 'Selecione o motivo da saída'),
   entrevista_realizada: z.enum([
     'sim_realizada',
@@ -107,8 +107,6 @@ const MOTIVOS_SAIDA = [
   'Outros',
 ]
 
-const LISTA_BPS = ['Geovany Araujo', 'Henmilly Vitória', 'Rafaela Alessandra']
-
 const STATUS_ENTREVISTA = [
   { value: 'sim_realizada',         label: 'Sim, realizada com o ex-colaborador' },
   { value: 'nao_recusou',           label: 'Não realizada – ex-colaborador recusou participar' },
@@ -164,7 +162,18 @@ export default function EntrevistaPage() {
   const [enviando,           setEnviando]           = useState(false)
   const [erroEnvio,          setErroEnvio]          = useState('')
   const [mostrarPerguntas,   setMostrarPerguntas]   = useState(false)
+  const [role,               setRole]               = useState<'admin' | 'comum' | null>(null)
+  const [bpNome,             setBpNome]             = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        setRole(json?.role ?? null)
+        setBpNome(json?.nome ?? '')
+      })
+  }, [])
 
   const {
     register,
@@ -266,24 +275,30 @@ export default function EntrevistaPage() {
   // ── Tela de sucesso ────────────────────────────────────────────────────────
   if (enviado) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
-        <Card className="max-w-md w-full text-center shadow-lg">
-          <CardContent className="pt-10 pb-10 space-y-4">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="w-9 h-9 text-green-600" />
-              </div>
-            </div>
-            <h2 className="text-xl font-semibold">Entrevista registrada!</h2>
-            <p className="text-muted-foreground text-sm">
-              A entrevista de desligamento foi salva com sucesso.
-            </p>
-            <Button className="w-full" render={<Link href="/" />}>
-              Voltar ao menu
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
+      <div className="min-h-screen flex flex-col bg-muted/40">
+        <FocoHeader />
+        <main className="flex-1 py-8 px-6">
+          <div className="max-w-sm mx-auto space-y-6">
+            <AdminNav role={role} />
+            <Card className="text-center shadow-lg">
+              <CardContent className="pt-10 pb-10 space-y-4">
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                    <CheckCircle2 className="w-9 h-9 text-green-600" />
+                  </div>
+                </div>
+                <h2 className="text-xl font-semibold">Entrevista registrada!</h2>
+                <p className="text-muted-foreground text-sm">
+                  A entrevista de desligamento foi salva com sucesso.
+                </p>
+                <Button className="w-full" render={<Link href="/" />}>
+                  Voltar ao menu
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
     )
   }
 
@@ -291,8 +306,10 @@ export default function EntrevistaPage() {
   return (
     <div className="min-h-screen flex flex-col bg-muted/40">
       <FocoHeader />
-      <main className="flex-1 py-10 px-4">
+      <main className="flex-1 py-8 px-6">
         <div className="max-w-2xl mx-auto space-y-6">
+
+          <AdminNav role={role} />
 
           <div className="text-center space-y-1">
             <h1 className="text-2xl font-bold">Entrevista de Desligamento</h1>
@@ -370,26 +387,10 @@ export default function EntrevistaPage() {
 
                 <Separator />
 
-                {/* BP responsável */}
+                {/* BP responsável — vem de quem está logado, não é escolhido */}
                 <div className="space-y-1">
                   <Label>BP responsável pela entrevista</Label>
-                  <Controller
-                    name="bp_responsavel"
-                    control={control}
-                    render={({ field }) => (
-                      <Select value={field.value ?? ''} onValueChange={field.onChange}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o BP..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LISTA_BPS.map((bp) => (
-                            <SelectItem key={bp} value={bp}>{bp}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.bp_responsavel && <p className="text-xs text-destructive">{errors.bp_responsavel.message}</p>}
+                  <Input readOnly value={bpNome} className="bg-muted cursor-default" />
                 </div>
 
                 {/* Motivo da saída */}

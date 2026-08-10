@@ -9,7 +9,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = verificarSessao(req)
+  const auth = await verificarSessao(req)
   if (auth) return auth
 
   const { id } = await params

@@ -1,9 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verificarSessaoBP } from '@/lib/auth'
+
+const TIMEOUT_MS   = 8000
+const MAX_TENTATIVAS = 3 // 1 tentativa original + 2 retentativas
+
+/**
+ * fetch com timeout e retentativa automática — só reenvia em falhas
+ * transitórias (erro de rede/timeout ou 5xx do TOTVS). 404/401/403 são
+ * respostas determinísticas do TOTVS e não adianta tentar de novo.
+ */
+async function fetchComRetry(url: string, options: RequestInit) {
+  let ultimoErro: unknown
+
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+    const controller = new AbortController()
+    const timeoutId   = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal })
+      clearTimeout(timeoutId)
+
+      if (response.status < 500) return response // sucesso ou erro do cliente — não repete
+
+      ultimoErro = new Error(`TOTVS respondeu ${response.status}`)
+    } catch (e) {
+      clearTimeout(timeoutId)
+      ultimoErro = e
+    }
+
+    if (tentativa < MAX_TENTATIVAS) {
+      await new Promise((r) => setTimeout(r, 500 * tentativa)) // backoff: 500ms, 1000ms
+    }
+  }
+
+  throw ultimoErro
+}
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ cpf: string }> }
 ) {
+  const auth = await verificarSessaoBP(req)
+  if (auth) return auth
+
   const { cpf } = await params
   const cpfLimpo = cpf.replace(/\D/g, '')
 
@@ -22,7 +61,7 @@ export async function GET(
   const url = `${baseUrl}/?parameters=CPF=${cpfLimpo}`
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchComRetry(url, {
       headers: {
         Authorization: `Basic ${credentials}`,
         'Content-Type': 'application/json',
@@ -48,7 +87,7 @@ export async function GET(
     if (!row) {
       return NextResponse.json({ error: 'CPF não encontrado.' }, { status: 404 })
     }
-    
+
     const tempoRaw = row.TEMPO_EMPRESA ?? row.tempo_empresa ?? ''
     const tempoEmAnos = (() => {
       const n = Number(tempoRaw)
@@ -67,9 +106,10 @@ export async function GET(
       tempo_empresa:   tempoEmAnos,
       loja_area:       row.CODIGO_CC       ?? row.codigo_cc       ?? ''
     })
-  } catch {
+  } catch (e) {
+    const timeout = e instanceof Error && e.name === 'AbortError'
     return NextResponse.json(
-      { error: 'Falha de conexão com o TOTVS RM.' },
+      { error: timeout ? 'O TOTVS RM demorou demais para responder.' : 'Falha de conexão com o TOTVS RM.' },
       { status: 503 }
     )
   }

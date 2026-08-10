@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
+import { FocoHeader } from '@/components/FocoHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -49,21 +49,10 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex flex-col bg-muted/40">
 
-      {/* Header igual às outras páginas */}
-      <header className="w-full bg-white border-b border-border py-3 px-6 flex items-center">
-        <Image
-          src="/Logotipo_Área_de_Proteção_Foco_Aluguel_de_Carros_2022-02.png"
-          alt="Foco Aluguel de Carros"
-          width={120}
-          height={40}
-          priority
-          style={{ width: 'auto', height: '32px' }}
-        />
-      </header>
+      <FocoHeader />
 
-      {/* Conteúdo centralizado com peso para cima */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 pb-24">
-        <div className="w-full max-w-sm space-y-6">
+      <main className="flex-1 py-8 px-6">
+        <div className="max-w-sm mx-auto space-y-6">
 
           <div className="text-center space-y-1">
             <h1 className="text-2xl font-bold">Área de Consulta</h1>

@@ -3,7 +3,7 @@ import sql from '@/lib/db'
 import { verificarSessao } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
-  const auth = verificarSessao(req)
+  const auth = await verificarSessao(req)
   if (auth) return auth
 
   const q = req.nextUrl.searchParams.get('q')?.trim() ?? ''

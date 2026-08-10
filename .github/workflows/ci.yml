@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - name: Audita dependências (falha só em vulnerabilidades altas/críticas)
+        run: npm audit --audit-level=high
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB:       offboarding_test
+          POSTGRES_USER:     offboarding
+          POSTGRES_PASSWORD: offboarding
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U offboarding -d offboarding_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Aplica o schema no banco de teste
+        run: PGPASSWORD=offboarding psql -h localhost -U offboarding -d offboarding_test -f db/schema.sql
+      - name: Cria .env.test
+        run: |
+          echo "DATABASE_URL=postgresql://offboarding:offboarding@localhost:5432/offboarding_test" >> .env.test
+          echo "AUTH_SECRET=segredo-de-teste-ci" >> .env.test
+      - run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
