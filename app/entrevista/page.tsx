@@ -163,6 +163,7 @@ export default function EntrevistaPage() {
   const [erroEnvio,          setErroEnvio]          = useState('')
   const [mostrarPerguntas,   setMostrarPerguntas]   = useState(false)
   const [role,               setRole]               = useState<'admin' | 'comum' | null>(null)
+  const [isBp,               setIsBp]               = useState(false)
   const [bpNome,             setBpNome]             = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -171,9 +172,15 @@ export default function EntrevistaPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
         setRole(json?.role ?? null)
+        setIsBp(json?.is_business_partner ?? false)
         setBpNome(json?.nome ?? '')
       })
   }, [])
+
+  // Admin sem a tag de BP entra só pra visualizar o formulário — o proxy.ts
+  // deixa a página abrir, mas o envio continua bloqueado (aqui na UI e
+  // também no servidor, em POST /api/entrevista).
+  const somenteVisualizacao = role === 'admin' && !isBp
 
   const {
     register,
@@ -204,15 +211,8 @@ export default function EntrevistaPage() {
       const nascimento = new Date(data.data_nascimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
       setValue('data_nascimento', nascimento)
       setValue('cargo',           data.cargo           ?? '')
-      const rawTempo = data.tempo_empresa ?? ''
-      const matchAnos  = rawTempo.match(/(\d+)\s*ano/)
-      const matchMeses = rawTempo.match(/(\d+)\s*m[eê]s/)
-      const anos  = matchAnos  ? parseInt(matchAnos[1])  : 0
-      const meses = matchMeses ? parseInt(matchMeses[1]) : 0
-      const tempoFormatado = (matchAnos || matchMeses)
-        ? (anos + meses / 12).toFixed(1)
-        : rawTempo
-      setValue('tempo_empresa', tempoFormatado)
+      // A API já devolve formatado em meses (ex.: "27 meses") — sem conversão aqui.
+      setValue('tempo_empresa', data.tempo_empresa ?? '')
       setValue('loja_area',       data.loja_area       ?? '')
       setBuscaStatus('found')
     } catch {
@@ -317,6 +317,12 @@ export default function EntrevistaPage() {
               Preencha os campos abaixo com as informações e respostas da entrevista.
             </p>
           </div>
+
+          {somenteVisualizacao && (
+            <p className="text-sm text-center bg-amber-100 text-amber-800 rounded-md py-2 px-3">
+              Você está vendo este formulário como administrador. Apenas Business Partners podem enviar entrevistas.
+            </p>
+          )}
 
           {erroEnvio && (
             <p className="text-sm text-destructive text-center bg-destructive/10 rounded-md py-2 px-3">
@@ -671,7 +677,8 @@ export default function EntrevistaPage() {
               type="submit"
               className="w-full"
               size="lg"
-              disabled={enviando || buscaStatus === 'loading'}
+              disabled={enviando || buscaStatus === 'loading' || somenteVisualizacao}
+              title={somenteVisualizacao ? 'Apenas Business Partners podem enviar entrevistas' : undefined}
             >
               {enviando ? 'Salvando...' : 'Salvar entrevista'}
             </Button>

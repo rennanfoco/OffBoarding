@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     await sql`INSERT INTO entrevistas_desligamento ${sql(dados)}`
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Erro interno.'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Erro ao salvar entrevista:', e)
+    return NextResponse.json({ error: 'Erro interno do servidor.' }, { status: 500 })
   }
 }

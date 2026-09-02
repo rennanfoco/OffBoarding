@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     sameSite: 'lax',
     path:     '/',
-    // Em produção com HTTPS, adicione: secure: true
+    secure:   process.env.NODE_ENV === 'production', // exige HTTPS em produção
     maxAge:   60 * 60 * 8, // 8 horas
   })
 

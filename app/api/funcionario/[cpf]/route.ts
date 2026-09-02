@@ -88,22 +88,21 @@ export async function GET(
       return NextResponse.json({ error: 'CPF não encontrado.' }, { status: 404 })
     }
 
+    // TOTVS devolve o tempo de empresa em dias corridos — convertemos direto
+    // pra meses aproximados (arredondado), sem passar por "X anos e Y meses".
     const tempoRaw = row.TEMPO_EMPRESA ?? row.tempo_empresa ?? ''
-    const tempoEmAnos = (() => {
-      const n = Number(tempoRaw)
-      if (!tempoRaw || isNaN(n)) return String(tempoRaw)
-      const anos = Math.floor(n / 365)
-      const meses = Math.floor((n % 365) / 30)
-      if (anos === 0) return meses <= 1 ? '1 mês' : `${meses} meses`
-      if (meses === 0) return anos === 1 ? '1 ano' : `${anos} anos`
-      return `${anos} ${anos === 1 ? 'ano' : 'anos'} e ${meses} ${meses === 1 ? 'mês' : 'meses'}`
+    const tempoEmMeses = (() => {
+      const dias = Number(tempoRaw)
+      if (!tempoRaw || isNaN(dias)) return String(tempoRaw)
+      const meses = Math.round(dias / 30)
+      return meses === 1 ? '1 mês' : `${meses} meses`
     })()
 
     return NextResponse.json({
       nome:            row.NOME            ?? row.nome            ?? '',
       data_nascimento: row.DTNASCIMENTO    ?? row.dataNascimento  ?? '',
       cargo:           row.CARGO           ?? row.cargo           ?? '',
-      tempo_empresa:   tempoEmAnos,
+      tempo_empresa:   tempoEmMeses,
       loja_area:       row.CODIGO_CC       ?? row.codigo_cc       ?? ''
     })
   } catch (e) {

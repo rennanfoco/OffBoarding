@@ -16,8 +16,11 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/consulta', req.url))
   }
 
-  // Logado, mas sem a marcação de Business Partner tentando preencher a entrevista
-  if (req.nextUrl.pathname.startsWith('/entrevista') && !sessao.is_business_partner) {
+  // Entrevista: BP entra pra preencher de verdade; admin sem a tag entra só
+  // pra visualizar o formulário (o envio continua bloqueado no servidor, em
+  // POST /api/entrevista, que exige a tag de BP independente disso).
+  const podeAbrirEntrevista = sessao.is_business_partner || sessao.role === 'admin'
+  if (req.nextUrl.pathname.startsWith('/entrevista') && !podeAbrirEntrevista) {
     return NextResponse.redirect(new URL('/consulta', req.url))
   }
 

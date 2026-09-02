@@ -38,7 +38,7 @@ export async function GET(
       },
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Erro interno.'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Erro ao gerar PDF da entrevista:', e)
+    return NextResponse.json({ error: 'Erro interno do servidor.' }, { status: 500 })
   }
 }
