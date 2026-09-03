@@ -465,7 +465,7 @@ export default function EntrevistaPage() {
                     <CardTitle className="text-base">Motivo do desligamento</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <p className="text-sm font-medium">1. Na sua opinião, qual é o real motivo do seu desligamento?</p>
+                    <p className="text-sm font-medium">1. Na sua opinião, qual foi o real motivo do seu desligamento?</p>
                     <Textarea
                       placeholder="Descreva o motivo..."
                       rows={3}
