@@ -109,10 +109,10 @@ const MOTIVOS_SAIDA = [
 
 const STATUS_ENTREVISTA = [
   { value: 'sim_realizada',         label: 'Sim, realizada com o ex-colaborador' },
-  { value: 'nao_recusou',           label: 'Não realizada – ex-colaborador recusou participar' },
-  { value: 'nao_decisao_empresa',   label: 'Não realizada – decisão da empresa' },
-  { value: 'nao_nao_respondeu',     label: 'Não realizada – ex-colaborador não respondeu' },
-  { value: 'nao_sem_contato',       label: 'Não realizada – não foi realizado contato com o ex-colaborador' },
+  { value: 'nao_recusou',           label: 'Não realizada - ex-colaborador recusou participar' },
+  { value: 'nao_decisao_empresa',   label: 'Não realizada - decisão da empresa' },
+  { value: 'nao_nao_respondeu',     label: 'Não realizada - ex-colaborador não respondeu' },
+  { value: 'nao_sem_contato',       label: 'Não realizada - não foi realizado contato com o ex-colaborador' },
 ]
 
 // ─── Componentes internos ────────────────────────────────────────────────────

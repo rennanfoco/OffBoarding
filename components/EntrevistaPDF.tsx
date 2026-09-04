@@ -278,15 +278,8 @@ function Campo({ label, value, full }: { label: string; value?: string; full?: b
   )
 }
 
-// Título de seção com uma margem mínima exigida à frente — evita o título
-// ficar sozinho no fim de uma página, com o conteúdo dele começando só na
-// página seguinte.
 function SectionTitle({ children }: { children: ReactNode }) {
-  return (
-    <Text style={s.sectionTitle} minPresenceAhead={50}>
-      {children}
-    </Text>
-  )
+  return <Text style={s.sectionTitle}>{children}</Text>
 }
 
 function Pergunta({
@@ -354,8 +347,18 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
           </Text>
         </View>
 
+        {/*
+          Toda <View style={s.section}> daqui pra baixo usa wrap={false}:
+          título e as perguntas daquela seção sempre pulam de página juntos.
+          Um minPresenceAhead no título sozinho não bastava — ele só garante
+          uma margem fixa de espaço à frente, não que a primeira pergunta
+          (de altura variável, por causa da justificativa) caiba nela; o
+          título passava no teste e ficava sozinho no fim da página mesmo
+          assim, com a pergunta inteira indo pra página seguinte.
+        */}
+
         {/* Identificação */}
-        <View style={s.section}>
+        <View style={s.section} wrap={false}>
           <SectionTitle>Identificação</SectionTitle>
           <View style={s.grid}>
             <Campo label="Nome completo"    value={data.nome}             full />
@@ -371,7 +374,7 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
         </View>
 
         {/* Motivo e status */}
-        <View style={s.section}>
+        <View style={s.section} wrap={false}>
           <SectionTitle>Desligamento</SectionTitle>
           <View style={s.grid}>
             <Campo label="Motivo da saída"          value={data.motivo_saida} full />
@@ -382,19 +385,19 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
         {/* Perguntas — só se realizada */}
         {realizada && (
           <>
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Motivo do desligamento</SectionTitle>
               <PerguntaAberta numero={1} texto="Na sua opinião, qual é o real motivo do seu desligamento?"
                 resposta={data.real_motivo_desligamento} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Retenção</SectionTitle>
               <PerguntaAberta numero={2} texto="O que poderia ter sido feito para evitar o seu desligamento?"
                 resposta={data.o_que_evitaria_saida} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Liderança e relações</SectionTitle>
               <Pergunta numero={3} texto="Como você avalia sua relação com sua liderança direta?"
                 escalaVal={data.avaliacao_lideranca} justificativa={data.avaliacao_lideranca_just} />
@@ -404,7 +407,7 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
                 escalaVal={data.recebia_feedbacks} justificativa={data.recebia_feedbacks_just} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Clareza e direcionamento</SectionTitle>
               <Pergunta numero={6} texto="Os objetivos e metas do seu trabalho eram claros para você?"
                 escalaVal={data.clareza_objetivos} justificativa={data.clareza_objetivos_just} />
@@ -412,7 +415,7 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
                 escalaVal={data.atividades_alinhadas_cargo} justificativa={data.atividades_alinhadas_cargo_just} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Desenvolvimento e carreira</SectionTitle>
               <Pergunta numero={8} texto="Como você avalia as oportunidades de crescimento e plano de carreira que a empresa oferece?"
                 escalaVal={data.oportunidades_crescimento} justificativa={data.oportunidades_crescimento_just} />
@@ -420,13 +423,13 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
                 escalaVal={data.oportunidades_treinamento} justificativa={data.oportunidades_treinamento_just} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Remuneração e benefícios</SectionTitle>
               <Pergunta numero={10} texto="Como você avalia sua remuneração (salário + benefícios)?"
                 escalaVal={data.avaliacao_remuneracao} justificativa={data.avaliacao_remuneracao_just} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Estrutura e ferramentas</SectionTitle>
               <Pergunta numero={11} texto="Como você avalia as ferramentas e recursos disponibilizados para o seu trabalho?"
                 escalaVal={data.avaliacao_ferramentas} justificativa={data.avaliacao_ferramentas_just} />
@@ -434,13 +437,13 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
                 escalaVal={data.avaliacao_estrutura_fisica} justificativa={data.avaliacao_estrutura_fisica_just} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Ambiente e cultura</SectionTitle>
               <Pergunta numero={13} texto="Como você se sentia no ambiente de trabalho?"
                 escalaVal={data.ambiente_trabalho} justificativa={data.ambiente_trabalho_just} />
             </View>
 
-            <View style={s.section}>
+            <View style={s.section} wrap={false}>
               <SectionTitle>Experiência geral — NPS</SectionTitle>
               <View style={s.question} wrap={false}>
                 <Text style={s.questionText}>14. Em uma escala de 0 a 10, o quanto você recomendaria a Foco como uma boa empresa para se trabalhar?</Text>
@@ -460,7 +463,7 @@ export function EntrevistaPDF({ data }: { data: EntrevistaData }) {
         )}
 
         {/* Parecer do BP */}
-        <View style={s.section}>
+        <View style={s.section} wrap={false}>
           <SectionTitle>Parecer do BP</SectionTitle>
           <View style={s.parecerBox}>
             <Text style={s.parecerText}>{texto(data.parecer_bp)}</Text>
