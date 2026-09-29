@@ -37,4 +37,15 @@ describe('proxy', () => {
     expect(res.status).toBe(307)
     expect(new URL(res.headers.get('location')!).pathname).toBe('/consulta')
   })
+
+  it('admin acessa /entrevista/editar/:id normalmente', async () => {
+    const res = await proxy(await reqComoAdmin('http://localhost/entrevista/editar/algum-id'))
+    expect(res.headers.get('location')).toBeNull()
+  })
+
+  it('BP sem ser admin é redirecionado de /entrevista/editar pra /consulta', async () => {
+    const res = await proxy(await reqComoBP('http://localhost/entrevista/editar/algum-id'))
+    expect(res.status).toBe(307)
+    expect(new URL(res.headers.get('location')!).pathname).toBe('/consulta')
+  })
 })

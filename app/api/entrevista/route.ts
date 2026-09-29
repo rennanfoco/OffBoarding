@@ -4,8 +4,13 @@ import { z } from 'zod'
 import { lerSessao, verificarSessaoBP } from '@/lib/auth'
 
 const escala = z.enum(['otimo', 'bom', 'regular', 'ruim'])
+// Um grupo de rádio sem nenhuma opção marcada é resolvido pelo cliente como
+// null (ver components/EntrevistaForm.tsx) — aceitar aqui também, senão o
+// servidor rejeita o que o próprio cliente manda.
+const escalaOpcional = escala.nullable().optional()
 
-const bodySchema = z.object({
+// Exportado — reaproveitado pelo PUT de edição em app/api/entrevista/[id]/route.ts
+export const bodySchema = z.object({
   // Identificação
   cpf:             z.string().min(11, 'CPF inválido'),
   nome:            z.string().min(1),
@@ -31,36 +36,36 @@ const bodySchema = z.object({
   o_que_evitaria_saida:     z.string().optional(),
 
   // Passo 2 — escala + justificativa Q3–Q13
-  avaliacao_lideranca:              escala.optional(),
+  avaliacao_lideranca:              escalaOpcional,
   avaliacao_lideranca_just:         z.string().optional(),
-  avaliacao_colegas:                escala.optional(),
+  avaliacao_colegas:                escalaOpcional,
   avaliacao_colegas_just:           z.string().optional(),
-  recebia_feedbacks:                escala.optional(),
+  recebia_feedbacks:                escalaOpcional,
   recebia_feedbacks_just:           z.string().optional(),
 
-  clareza_objetivos:                escala.optional(),
+  clareza_objetivos:                escalaOpcional,
   clareza_objetivos_just:           z.string().optional(),
-  atividades_alinhadas_cargo:       escala.optional(),
+  atividades_alinhadas_cargo:       escalaOpcional,
   atividades_alinhadas_cargo_just:  z.string().optional(),
 
-  oportunidades_crescimento:        escala.optional(),
+  oportunidades_crescimento:        escalaOpcional,
   oportunidades_crescimento_just:   z.string().optional(),
-  oportunidades_treinamento:        escala.optional(),
+  oportunidades_treinamento:        escalaOpcional,
   oportunidades_treinamento_just:   z.string().optional(),
 
-  avaliacao_remuneracao:            escala.optional(),
+  avaliacao_remuneracao:            escalaOpcional,
   avaliacao_remuneracao_just:       z.string().optional(),
 
-  avaliacao_ferramentas:            escala.optional(),
+  avaliacao_ferramentas:            escalaOpcional,
   avaliacao_ferramentas_just:       z.string().optional(),
-  avaliacao_estrutura_fisica:       escala.optional(),
+  avaliacao_estrutura_fisica:       escalaOpcional,
   avaliacao_estrutura_fisica_just:  z.string().optional(),
 
-  ambiente_trabalho:                escala.optional(),
+  ambiente_trabalho:                escalaOpcional,
   ambiente_trabalho_just:           z.string().optional(),
 
   // Q14 — NPS
-  nps:      z.coerce.number().int().min(0).max(10).optional(),
+  nps:      z.coerce.number().int().min(0).max(10).nullable().optional(),
   nps_just: z.string().optional(),
 
   // Passo 3

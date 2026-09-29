@@ -82,5 +82,10 @@ CREATE TABLE entrevistas_desligamento (
   -- Passo 3: Parecer do BP
   parecer_bp TEXT,
 
-  criado_em TIMESTAMPTZ DEFAULT NOW()
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Auditoria de edição por admin (entrevista em si continua sendo criada
+  -- só pelo BP responsável — isso aqui é só quem editou depois de salva)
+  editado_por TEXT,
+  editado_em  TIMESTAMPTZ
 );

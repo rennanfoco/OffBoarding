@@ -215,6 +215,15 @@ export default function ConsultaPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => router.push(`/entrevista/editar/${e.id}`)}
+                              >
+                                Editar
+                              </Button>
+                            )}
+                            {role === 'admin' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 disabled={excluindo === e.id}
                                 onClick={() => excluirEntrevista(e.id, e.nome)}
                               >
@@ -283,6 +292,16 @@ export default function ConsultaPage() {
                       >
                         {baixando === e.id ? '...' : '⬇ PDF'}
                       </Button>
+                      {role === 'admin' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => router.push(`/entrevista/editar/${e.id}`)}
+                        >
+                          Editar
+                        </Button>
+                      )}
                       {role === 'admin' && (
                         <Button
                           size="sm"

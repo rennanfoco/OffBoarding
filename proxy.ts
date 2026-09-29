@@ -16,9 +16,16 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/consulta', req.url))
   }
 
-  // Entrevista: BP entra pra preencher de verdade; admin sem a tag entra só
-  // pra visualizar o formulário (o envio continua bloqueado no servidor, em
-  // POST /api/entrevista, que exige a tag de BP independente disso).
+  // Edição de entrevista já salva: só admin (checado antes da regra geral de
+  // /entrevista logo abaixo, que é mais permissiva).
+  if (req.nextUrl.pathname.startsWith('/entrevista/editar') && sessao.role !== 'admin') {
+    return NextResponse.redirect(new URL('/consulta', req.url))
+  }
+
+  // Entrevista (criação): BP entra pra preencher de verdade; admin sem a tag
+  // entra só pra visualizar o formulário (o envio continua bloqueado no
+  // servidor, em POST /api/entrevista, que exige a tag de BP independente
+  // disso).
   const podeAbrirEntrevista = sessao.is_business_partner || sessao.role === 'admin'
   if (req.nextUrl.pathname.startsWith('/entrevista') && !podeAbrirEntrevista) {
     return NextResponse.redirect(new URL('/consulta', req.url))
@@ -28,5 +35,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/consulta', '/admin/:path*', '/conta', '/entrevista'],
+  matcher: ['/consulta', '/admin/:path*', '/conta', '/entrevista/:path*'],
 }
