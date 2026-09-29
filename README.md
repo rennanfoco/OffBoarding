@@ -137,7 +137,9 @@ instrumentation.ts              # Hook do Next.js — roda bootstrap-admin.ts qu
 
 db/
 ├── schema.sql                 # Script de criação das tabelas (bancos novos)
-└── migrations/                # Migrações incrementais (bancos já existentes)
+└── migrations/                # Migrações incrementais — aplicadas automaticamente
+                                # no boot (ver lib/migrate.ts), sem precisar rodar
+                                # nada à mão em produção
 
 scripts/
 └── seed-admin.mjs             # Cria/reseta o primeiro usuário administrador
@@ -224,7 +226,7 @@ que garante que `next build` continua funcionando.
 Antes de subir em produção, certifique-se de:
 
 1. Trocar `AUTH_SECRET` por uma string aleatória longa (`openssl rand -base64 32`) — trocar esse valor invalida todas as sessões ativas
-2. Apontar `DATABASE_URL` para a instância RDS e rodar `db/schema.sql` nela antes do primeiro deploy (banco novo) — ou `db/migrations/001_usuarios_e_business_partners.sql` se o banco já existir
+2. Apontar `DATABASE_URL` para a instância RDS e rodar `db/schema.sql` nela antes do primeiro deploy — só necessário pra um **banco novo, vazio**. Se o banco já existe (atualizando uma versão anterior), não precisa rodar nada à mão: o próprio app aplica sozinho, no boot, qualquer migração pendente de `db/migrations/` (veja a seção "Se o app já está em produção" mais abaixo)
 3. Criar o primeiro administrador — veja as duas opções na seção seguinte
 4. Usar HTTPS (obrigatório para o cookie `secure`)
 5. Gerenciar os Business Partners em `/admin/usuarios` em vez de editar código
@@ -252,9 +254,19 @@ configuradas permanentemente. Ver `instrumentation.ts` e
 Depois de criado (por qualquer uma das duas opções), confirme o login em
 `/login` antes de considerar o deploy concluído.
 
-### Se o app já está em produção (migração)
+### Se o app já está em produção (atualizando uma versão anterior)
 
-1. Rodar `db/migrations/001_usuarios_e_business_partners.sql` no RDS
-2. Criar o primeiro admin (opção A ou B acima)
-3. Deploy do novo código (login passa a exigir usuário cadastrado no banco)
-4. Confirmar login com o admin criado
+1. Deploy do novo código — no boot, o próprio app aplica sozinho qualquer
+   migração pendente de `db/migrations/`, na ordem do nome do arquivo,
+   guardando o que já rodou numa tabela `migracoes_aplicadas` (não roda a
+   mesma migração duas vezes, mesmo reiniciando várias vezes). Ver
+   `lib/migrate.ts` e `instrumentation.ts`
+2. Criar o primeiro admin, se ainda não existir (opção A ou B acima)
+3. Confirmar login com o admin criado
+
+Se preferir aplicar uma migração manualmente antes do deploy (por
+precaução, ou pra revisar o que vai mudar), ainda dá pra rodar direto:
+
+```bash
+psql "postgresql://usuario:senha@endpoint.rds.amazonaws.com:5432/offboarding" -f db/migrations/003_auditoria_edicao_entrevista.sql
+```
