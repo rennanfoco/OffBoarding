@@ -173,7 +173,7 @@ export default function ConsultaPage() {
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground">Motivo</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground">Entrevista</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground"></th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground sticky right-0 bg-muted/50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -201,7 +201,9 @@ export default function ConsultaPage() {
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                           {formatDate(e.criado_em)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td
+                          className={`px-4 py-3 sticky right-0 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)] ${i % 2 === 0 ? 'bg-card' : 'bg-muted/10'}`}
+                        >
                           <div className="flex gap-2">
                             <Button
                               size="sm"
