@@ -9,7 +9,9 @@ import { NextRequest, NextResponse } from 'next/server'
  * Payload: { uid, usuario, nome, role, is_business_partner, exp } — exp em epoch ms.
  */
 
-export type Role = 'admin' | 'comum'
+// Hierarquia: comum < editor < admin. Editor edita e exclui entrevistas já
+// salvas, mas não gerencia usuários (isso é só admin).
+export type Role = 'admin' | 'editor' | 'comum'
 
 export type Sessao = {
   uid:                  string
@@ -124,6 +126,18 @@ export async function verificarSessaoAdmin(req: NextRequest): Promise<NextRespon
   }
   if (sessao.role !== 'admin') {
     return NextResponse.json({ error: 'Acesso restrito a administradores.' }, { status: 403 })
+  }
+  return null
+}
+
+/** Igual a `verificarSessao`, mas exige papel de editor ou administrador (403 caso contrário). */
+export async function verificarSessaoEditor(req: NextRequest): Promise<NextResponse | null> {
+  const sessao = await lerSessao(req)
+  if (!sessao) {
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
+  }
+  if (sessao.role !== 'admin' && sessao.role !== 'editor') {
+    return NextResponse.json({ error: 'Acesso restrito a editores e administradores.' }, { status: 403 })
   }
   return null
 }

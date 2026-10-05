@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from 'vitest'
 import sql from '@/lib/db'
-import { reqComoAdmin, reqComoComum, reqComoBP, reqSemSessao, jsonBody } from '@/tests/helpers'
+import { reqComoAdmin, reqComoComum, reqComoBP, reqComoEditor, reqSemSessao, jsonBody } from '@/tests/helpers'
 import { GET, PUT, DELETE } from '@/app/api/entrevista/[id]/route'
 
 const CPF_TESTE = '33344455566'
@@ -25,6 +25,7 @@ async function criarEntrevista() {
 
 afterAll(async () => {
   await sql`DELETE FROM entrevistas_desligamento WHERE cpf = ${CPF_TESTE}`
+  await sql`DELETE FROM entrevistas_excluidas WHERE cpf_mascarado = '333.444.***.66'`
   await sql.end()
 })
 
@@ -45,6 +46,12 @@ describe('GET /api/entrevista/[id]', () => {
     const idFalso = '00000000-0000-0000-0000-000000000000'
     const res = await GET(await reqComoAdmin(url(idFalso)), paramsFor(idFalso))
     expect(res.status).toBe(404)
+  })
+
+  it('editor também recebe os dados (precisa deles pra abrir a tela de edição)', async () => {
+    const id = await criarEntrevista()
+    const res = await GET(await reqComoEditor(url(id)), paramsFor(id))
+    expect(res.status).toBe(200)
   })
 
   it('admin recebe os dados completos da entrevista', async () => {
@@ -108,6 +115,17 @@ describe('PUT /api/entrevista/[id]', () => {
     expect(row.editado_em).not.toBeNull()
   })
 
+  it('editor edita a entrevista e fica registrado como quem editou', async () => {
+    const id = await criarEntrevista()
+    const req = await reqComoEditor(url(id), { method: 'PUT', ...jsonBody(PAYLOAD_VALIDO) })
+    const res = await PUT(req, paramsFor(id))
+    expect(res.status).toBe(200)
+
+    const [row] = await sql`SELECT editado_por, bp_responsavel FROM entrevistas_desligamento WHERE id = ${id}`
+    expect(row.editado_por).toBe('Editor de Teste')
+    expect(row.bp_responsavel).toBe(BP_ORIGINAL)
+  })
+
   it('aceita null nas perguntas de escala e no NPS (pergunta sem resposta)', async () => {
     // Um formulário sem nenhuma opção de rádio marcada manda `null`, não
     // `undefined`, pra essas perguntas — cobre o bug encontrado testando a
@@ -149,12 +167,33 @@ describe('DELETE /api/entrevista/[id]', () => {
     expect(res.status).toBe(404)
   })
 
-  it('admin exclui a entrevista com sucesso', async () => {
+  it('admin exclui a entrevista com sucesso e a exclusão fica registrada no log', async () => {
     const id = await criarEntrevista()
     const res = await DELETE(await reqComoAdmin(url(id)), paramsFor(id))
     expect(res.status).toBe(200)
 
     const [row] = await sql`SELECT id FROM entrevistas_desligamento WHERE id = ${id}`
     expect(row).toBeUndefined()
+
+    const [log] = await sql`SELECT nome, cpf_mascarado, excluido_por FROM entrevistas_excluidas WHERE entrevista_id = ${id}`
+    expect(log.nome).toBe('Fulano Editável')
+    expect(log.cpf_mascarado).toBe('333.444.***.66') // nunca o CPF inteiro
+    expect(log.excluido_por).toBe('Admin de Teste')
+  })
+
+  it('editor também exclui, e o log registra o nome do editor', async () => {
+    const id = await criarEntrevista()
+    const res = await DELETE(await reqComoEditor(url(id)), paramsFor(id))
+    expect(res.status).toBe(200)
+
+    const [log] = await sql`SELECT excluido_por FROM entrevistas_excluidas WHERE entrevista_id = ${id}`
+    expect(log.excluido_por).toBe('Editor de Teste')
+  })
+
+  it('exclusão de id inexistente não grava nada no log', async () => {
+    const idFalso = '00000000-0000-0000-0000-000000000001'
+    await DELETE(await reqComoAdmin(url(idFalso)), paramsFor(idFalso))
+    const linhas = await sql`SELECT id FROM entrevistas_excluidas WHERE entrevista_id = ${idFalso}`
+    expect(linhas.length).toBe(0)
   })
 })

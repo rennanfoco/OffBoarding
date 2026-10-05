@@ -25,6 +25,10 @@ export function reqComoComum(url: string, init: NextReqInit = {}, uid = 'comum-d
   return reqComSessao({ uid, usuario: 'comum_teste', nome: 'Comum de Teste', role: 'comum', is_business_partner: false }, url, init)
 }
 
+export function reqComoEditor(url: string, init: NextReqInit = {}, uid = 'editor-de-teste') {
+  return reqComSessao({ uid, usuario: 'editor_teste', nome: 'Editor de Teste', role: 'editor', is_business_partner: false }, url, init)
+}
+
 export function reqComoBP(url: string, init: NextReqInit = {}, uid = 'bp-de-teste', nome = 'BP de Teste') {
   return reqComSessao({ uid, usuario: 'bp_teste', nome, role: 'comum', is_business_partner: true }, url, init)
 }

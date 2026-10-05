@@ -6,7 +6,7 @@ CREATE TABLE usuarios (
   usuario TEXT NOT NULL UNIQUE,
   nome TEXT NOT NULL,
   senha_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('admin','comum')),
+  role TEXT NOT NULL CHECK (role IN ('admin','editor','comum')),
   is_business_partner BOOLEAN NOT NULL DEFAULT false,
   criado_em TIMESTAMPTZ DEFAULT NOW()
 );
@@ -88,4 +88,15 @@ CREATE TABLE entrevistas_desligamento (
   -- só pelo BP responsável — isso aqui é só quem editou depois de salva)
   editado_por TEXT,
   editado_em  TIMESTAMPTZ
+);
+
+-- Log de exclusões de entrevistas (quem excluiu e quando). É um log, não um
+-- backup — guarda só o mínimo pra identificar o que foi removido.
+CREATE TABLE entrevistas_excluidas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  entrevista_id UUID NOT NULL,
+  nome          TEXT NOT NULL,
+  cpf_mascarado TEXT NOT NULL,
+  excluido_por  TEXT NOT NULL,
+  excluido_em   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

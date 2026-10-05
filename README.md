@@ -12,7 +12,7 @@ Sistema web interno para registro e consulta de entrevistas de desligamento, uti
   - Passo 3: Parecer do BP
 - **Consulta de entrevistas** — área protegida por login com tabela pesquisável por nome ou CPF e download de PDF por registro
 - **Geração de PDF** — relatório completo da entrevista gerado no servidor
-- **Usuários com papéis** — contas individuais (`admin` / `comum`); administradores podem criar/remover usuários, excluir entrevistas e gerenciar os Business Partners
+- **Usuários com papéis** — contas individuais (`admin` / `editor` / `comum`). `comum` consulta e baixa PDFs; `editor` também edita e exclui entrevistas já salvas; `admin` faz tudo isso e ainda gerencia usuários, papéis e Business Partners. Edições registram quem editou e quando; exclusões ficam num log (`entrevistas_excluidas`: quem excluiu, quando, nome e CPF mascarado) que o admin consulta em `/admin/exclusoes`
 - **Gestão de Business Partners** — lista de BPs (usada no Passo 1 do formulário) editável pelos administradores, com opção de desativar sem apagar o histórico
 
 ---

@@ -225,7 +225,7 @@ export function EntrevistaForm({ modo, entrevistaId, dadosIniciais }: Entrevista
   const [mostrarPerguntas,   setMostrarPerguntas]   = useState(
     dadosIniciais?.entrevista_realizada === 'sim_realizada'
   )
-  const [role,               setRole]               = useState<'admin' | 'comum' | null>(null)
+  const [role,               setRole]               = useState<'admin' | 'editor' | 'comum' | null>(null)
   const [isBp,               setIsBp]               = useState(false)
   const [bpNome,             setBpNome]             = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)

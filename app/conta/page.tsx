@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 export default function ContaPage() {
   const router = useRouter()
 
-  const [role,      setRole]      = useState<'admin' | 'comum' | null>(null)
+  const [role,      setRole]      = useState<'admin' | 'editor' | 'comum' | null>(null)
   const [usuario,   setUsuario]   = useState('')
 
   const [senhaAtual, setSenhaAtual] = useState('')

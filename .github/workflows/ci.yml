@@ -17,8 +17,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
-      - name: Audita dependências (falha só em vulnerabilidades altas/críticas)
-        run: npm audit --audit-level=high
+      # --omit=dev: audita só o que vai pra produção. Advisories de ferramentas
+      # de lint/CLI (eslint-config-next, shadcn...) não afetam o app rodando e,
+      # quando não têm correção publicada, travavam o CI sem como resolver.
+      - name: Audita dependências de produção (falha só em vulnerabilidades altas/críticas)
+        run: npm audit --omit=dev --audit-level=high
 
   test:
     runs-on: ubuntu-latest

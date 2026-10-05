@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
-import { lerSessao, verificarSessaoAdmin } from '@/lib/auth'
+import { lerSessao, verificarSessaoEditor } from '@/lib/auth'
 import { bodySchema } from '@/app/api/entrevista/route'
+import { mascararCpf } from '@/lib/utils'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await verificarSessaoAdmin(req)
+  const auth = await verificarSessaoEditor(req)
   if (auth) return auth
 
   const { id } = await params
@@ -27,7 +28,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await verificarSessaoAdmin(req)
+  const auth = await verificarSessaoEditor(req)
   if (auth) return auth
 
   const sessao = await lerSessao(req) // garantido não-nulo pelo guard acima
@@ -79,14 +80,26 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await verificarSessaoAdmin(req)
+  const auth = await verificarSessaoEditor(req)
   if (auth) return auth
 
+  const sessao = await lerSessao(req) // garantido não-nulo pelo guard acima
   const { id } = await params
 
-  const [removida] = await sql`
-    DELETE FROM entrevistas_desligamento WHERE id = ${id} RETURNING id
-  `
+  // Exclusão e registro no log na mesma transação: ou acontecem as duas
+  // coisas, ou nenhuma — nunca uma entrevista some sem deixar rastro.
+  const removida = await sql.begin(async (tx) => {
+    const [linha] = await tx`
+      DELETE FROM entrevistas_desligamento WHERE id = ${id} RETURNING id, nome, cpf
+    `
+    if (!linha) return null
+
+    await tx`
+      INSERT INTO entrevistas_excluidas (entrevista_id, nome, cpf_mascarado, excluido_por)
+      VALUES (${linha.id}, ${linha.nome}, ${mascararCpf(linha.cpf)}, ${sessao!.nome})
+    `
+    return linha
+  })
 
   if (!removida) {
     return NextResponse.json({ error: 'Entrevista não encontrada.' }, { status: 404 })

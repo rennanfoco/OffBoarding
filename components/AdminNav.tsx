@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
 type Props = {
-  role: 'admin' | 'comum' | null
+  role: 'admin' | 'editor' | 'comum' | null
 }
 
 const COMMON_LINKS = [
@@ -14,6 +14,7 @@ const COMMON_LINKS = [
 
 const ADMIN_LINKS = [
   { href: '/admin/usuarios', label: 'Usuários' },
+  { href: '/admin/exclusoes', label: 'Exclusões' },
 ]
 
 const ACCOUNT_LINK = { href: '/conta', label: 'Minha Conta' }

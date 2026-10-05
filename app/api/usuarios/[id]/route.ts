@@ -6,7 +6,7 @@ import { lerSessao, verificarSessaoAdmin } from '@/lib/auth'
 
 const bodySchema = z.object({
   nome:                z.string().min(1).optional(),
-  role:                z.enum(['admin', 'comum']).optional(),
+  role:                z.enum(['admin', 'editor', 'comum']).optional(),
   senha:               z.string().min(6, 'A senha deve ter pelo menos 6 caracteres').optional(),
   is_business_partner: z.boolean().optional(),
 })
@@ -28,6 +28,22 @@ export async function PUT(
   }
 
   const { nome, role, senha, is_business_partner } = parsed.data
+
+  // Rebaixar o último administrador deixaria o sistema sem ninguém capaz de
+  // gerenciar usuários — mesma regra que já vale pra excluí-lo (DELETE).
+  if (role && role !== 'admin') {
+    const [alvo] = await sql`SELECT role FROM usuarios WHERE id = ${id}`
+    if (alvo?.role === 'admin') {
+      const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM usuarios WHERE role = 'admin'`
+      if (count <= 1) {
+        return NextResponse.json(
+          { error: 'Não é possível rebaixar o único administrador restante.' },
+          { status: 400 }
+        )
+      }
+    }
+  }
+
   const senhaHash = senha ? await bcrypt.hash(senha, 10) : null
 
   const [atualizado] = await sql`

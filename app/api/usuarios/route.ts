@@ -8,7 +8,7 @@ const bodySchema = z.object({
   usuario:             z.string().min(1, 'Informe o usuário'),
   nome:                z.string().min(1, 'Informe o nome'),
   senha:               z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  role:                z.enum(['admin', 'comum']),
+  role:                z.enum(['admin', 'editor', 'comum']),
   is_business_partner: z.boolean().optional().default(false),
 })
 

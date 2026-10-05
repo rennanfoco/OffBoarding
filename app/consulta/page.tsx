@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { mascararCpf } from '@/lib/utils'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -39,24 +40,21 @@ function formatDate(iso: string) {
   })
 }
 
-function mascaraCpf(cpf: string) {
-  const c = cpf.replace(/\D/g, '')
-  if (c.length !== 11) return cpf
-  return `${c.slice(0, 3)}.${c.slice(3, 6)}.***.${c.slice(9)}`
-}
-
 // ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function ConsultaPage() {
   const router = useRouter()
 
-  const [role,        setRole]        = useState<'admin' | 'comum' | null>(null)
+  const [role,        setRole]        = useState<'admin' | 'editor' | 'comum' | null>(null)
   const [entrevistas, setEntrevistas] = useState<Entrevista[]>([])
   const [carregando,  setCarregando]  = useState(true)
   const [busca,       setBusca]       = useState('')
   const [baixando,    setBaixando]    = useState<string | null>(null)
   const [excluindo,   setExcluindo]   = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Editar e excluir entrevistas: admin ou editor
+  const podeEditar = role === 'admin' || role === 'editor'
 
   async function buscar(q: string) {
     setCarregando(true)
@@ -183,7 +181,7 @@ export default function ConsultaPage() {
                         className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${i % 2 === 0 ? '' : 'bg-muted/10'}`}
                       >
                         <td className="px-4 py-3 font-medium">{e.nome}</td>
-                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{mascaraCpf(e.cpf)}</td>
+                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{mascararCpf(e.cpf)}</td>
                         <td className="px-4 py-3 text-muted-foreground">{e.cargo || '—'}</td>
                         <td className="px-4 py-3 text-muted-foreground">{e.loja_area || '—'}</td>
                         <td className="px-4 py-3">{e.bp_responsavel}</td>
@@ -213,7 +211,7 @@ export default function ConsultaPage() {
                             >
                               {baixando === e.id ? '...' : '⬇ PDF'}
                             </Button>
-                            {role === 'admin' && (
+                            {podeEditar && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -222,7 +220,7 @@ export default function ConsultaPage() {
                                 Editar
                               </Button>
                             )}
-                            {role === 'admin' && (
+                            {podeEditar && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -251,7 +249,7 @@ export default function ConsultaPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="font-medium">{e.nome}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{mascaraCpf(e.cpf)}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{mascararCpf(e.cpf)}</p>
                       </div>
                       <Badge
                         variant={e.entrevista_realizada === 'sim_realizada' ? 'default' : 'outline'}
@@ -294,7 +292,7 @@ export default function ConsultaPage() {
                       >
                         {baixando === e.id ? '...' : '⬇ PDF'}
                       </Button>
-                      {role === 'admin' && (
+                      {podeEditar && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -304,7 +302,7 @@ export default function ConsultaPage() {
                           Editar
                         </Button>
                       )}
-                      {role === 'admin' && (
+                      {podeEditar && (
                         <Button
                           size="sm"
                           variant="outline"

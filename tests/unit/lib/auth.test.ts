@@ -2,7 +2,7 @@
 // de assinar/verificar o cookie de sessão em memória.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import { criarSessao, lerSessao, verificarSessao, verificarSessaoAdmin, verificarSessaoBP, type Sessao } from '@/lib/auth'
+import { criarSessao, lerSessao, verificarSessao, verificarSessaoAdmin, verificarSessaoEditor, verificarSessaoBP, type Sessao } from '@/lib/auth'
 
 function reqComCookie(cookieValue?: string) {
   const headers = new Headers()
@@ -87,6 +87,37 @@ describe('verificarSessaoAdmin', () => {
   it('retorna 401 sem sessão', async () => {
     const resposta = await verificarSessaoAdmin(reqComCookie())
     expect(resposta?.status).toBe(401)
+  })
+})
+
+describe('verificarSessaoEditor', () => {
+  it('retorna null (autorizado) para editor', async () => {
+    const cookie = await criarSessao({ ...SESSAO_TESTE, role: 'editor' })
+    expect(await verificarSessaoEditor(reqComCookie(cookie!))).toBeNull()
+  })
+
+  it('retorna null (autorizado) para admin — admin também pode tudo que o editor pode', async () => {
+    const cookie = await criarSessao({ ...SESSAO_TESTE, role: 'admin' })
+    expect(await verificarSessaoEditor(reqComCookie(cookie!))).toBeNull()
+  })
+
+  it('retorna 403 para usuário comum', async () => {
+    const cookie = await criarSessao(SESSAO_TESTE) // role: comum
+    const resposta = await verificarSessaoEditor(reqComCookie(cookie!))
+    expect(resposta?.status).toBe(403)
+  })
+
+  it('retorna 401 sem sessão', async () => {
+    const resposta = await verificarSessaoEditor(reqComCookie())
+    expect(resposta?.status).toBe(401)
+  })
+})
+
+describe('verificarSessaoAdmin com editor', () => {
+  it('editor continua barrado (403) nas rotas só de admin', async () => {
+    const cookie = await criarSessao({ ...SESSAO_TESTE, role: 'editor' })
+    const resposta = await verificarSessaoAdmin(reqComCookie(cookie!))
+    expect(resposta?.status).toBe(403)
   })
 })
 

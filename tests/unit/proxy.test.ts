@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { proxy } from '@/proxy'
-import { reqComoAdmin, reqComoComum, reqComoBP, reqSemSessao } from '@/tests/helpers'
+import { reqComoAdmin, reqComoComum, reqComoBP, reqComoEditor, reqSemSessao } from '@/tests/helpers'
 
 describe('proxy', () => {
   it('sem sessão, redireciona pro login preservando a rota de origem', async () => {
@@ -45,6 +45,17 @@ describe('proxy', () => {
 
   it('BP sem ser admin é redirecionado de /entrevista/editar pra /consulta', async () => {
     const res = await proxy(await reqComoBP('http://localhost/entrevista/editar/algum-id'))
+    expect(res.status).toBe(307)
+    expect(new URL(res.headers.get('location')!).pathname).toBe('/consulta')
+  })
+
+  it('editor acessa /entrevista/editar/:id normalmente', async () => {
+    const res = await proxy(await reqComoEditor('http://localhost/entrevista/editar/algum-id'))
+    expect(res.headers.get('location')).toBeNull()
+  })
+
+  it('editor continua barrado de /admin (só admin gerencia usuários)', async () => {
+    const res = await proxy(await reqComoEditor('http://localhost/admin/usuarios'))
     expect(res.status).toBe(307)
     expect(new URL(res.headers.get('location')!).pathname).toBe('/consulta')
   })

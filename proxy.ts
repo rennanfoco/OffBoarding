@@ -16,10 +16,14 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/consulta', req.url))
   }
 
-  // Edição de entrevista já salva: só admin (checado antes da regra geral de
-  // /entrevista logo abaixo, que é mais permissiva).
-  if (req.nextUrl.pathname.startsWith('/entrevista/editar') && sessao.role !== 'admin') {
-    return NextResponse.redirect(new URL('/consulta', req.url))
+  // Edição de entrevista já salva: admin ou editor. Resolvida por completo
+  // aqui (retorna antes da regra geral de /entrevista logo abaixo, que olha a
+  // tag de BP — não faz sentido pra quem só vai editar uma entrevista existente).
+  if (req.nextUrl.pathname.startsWith('/entrevista/editar')) {
+    if (sessao.role !== 'admin' && sessao.role !== 'editor') {
+      return NextResponse.redirect(new URL('/consulta', req.url))
+    }
+    return NextResponse.next()
   }
 
   // Entrevista (criação): BP entra pra preencher de verdade; admin sem a tag

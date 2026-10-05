@@ -21,7 +21,7 @@ type Usuario = {
   id:                  string
   usuario:             string
   nome:                string
-  role:                'admin' | 'comum'
+  role:                'admin' | 'editor' | 'comum'
   is_business_partner: boolean
   criado_em:           string
 }
@@ -35,14 +35,14 @@ function formatDate(iso: string) {
 export default function UsuariosPage() {
   const router = useRouter()
 
-  const [role,      setRole]      = useState<'admin' | 'comum' | null>(null)
+  const [role,      setRole]      = useState<'admin' | 'editor' | 'comum' | null>(null)
   const [usuarios,  setUsuarios]  = useState<Usuario[]>([])
   const [carregando, setCarregando] = useState(true)
 
   const [usuarioNovo, setUsuarioNovo] = useState('')
   const [nomeNovo,    setNomeNovo]    = useState('')
   const [senha,      setSenha]      = useState('')
-  const [novoRole,   setNovoRole]   = useState<'admin' | 'comum'>('comum')
+  const [novoRole,   setNovoRole]   = useState<'admin' | 'editor' | 'comum'>('comum')
   const [novoBp,     setNovoBp]     = useState(false)
   const [criando,    setCriando]    = useState(false)
   const [erro,       setErro]       = useState('')
@@ -163,6 +163,26 @@ export default function UsuariosPage() {
     }
   }
 
+  async function mudarPapel(u: Usuario, papel: Usuario['role'], confirmacao: string) {
+    if (!confirm(confirmacao)) return
+    setSalvando(u.id)
+    try {
+      const res = await fetch(`/api/usuarios/${u.id}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ role: papel }),
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        alert(json.error ?? 'Erro ao atualizar.')
+        return
+      }
+      await carregarUsuarios()
+    } finally {
+      setSalvando(null)
+    }
+  }
+
   if (!role) return null
 
   return (
@@ -201,12 +221,17 @@ export default function UsuariosPage() {
                 </div>
                 <div className="space-y-1">
                   <Label>Papel</Label>
-                  <Select value={novoRole} onValueChange={(v) => setNovoRole(v as 'admin' | 'comum')}>
+                  <Select
+                    items={{ comum: 'Comum', editor: 'Editor (edita e exclui entrevistas)', admin: 'Administrador' }}
+                    value={novoRole}
+                    onValueChange={(v) => setNovoRole(v as 'admin' | 'editor' | 'comum')}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="comum">Comum</SelectItem>
+                      <SelectItem value="editor">Editor (edita e exclui entrevistas)</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                     </SelectContent>
                   </Select>
@@ -245,7 +270,7 @@ export default function UsuariosPage() {
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Papel</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">BP</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Criado em</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground"></th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground sticky right-0 bg-muted/50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -265,15 +290,17 @@ export default function UsuariosPage() {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{u.usuario}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={u.role === 'admin' ? 'default' : 'outline'}>
-                          {u.role === 'admin' ? 'Administrador' : 'Comum'}
+                        <Badge variant={u.role === 'comum' ? 'outline' : 'default'}>
+                          {{ admin: 'Administrador', editor: 'Editor', comum: 'Comum' }[u.role]}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
                         {u.is_business_partner && <Badge variant="outline">BP</Badge>}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(u.criado_em)}</td>
-                      <td className="px-4 py-3">
+                      <td
+                        className={`px-4 py-3 sticky right-0 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)] ${i % 2 === 0 ? 'bg-card' : 'bg-muted/10'}`}
+                      >
                         <div className="flex gap-2 justify-end">
                           {editandoId === u.id ? (
                             <>
@@ -297,6 +324,45 @@ export default function UsuariosPage() {
                               >
                                 {salvando === u.id ? '...' : u.is_business_partner ? 'Remover BP' : 'Marcar BP'}
                               </Button>
+                              {u.role === 'comum' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={salvando === u.id}
+                                  onClick={() => mudarPapel(
+                                    u, 'editor',
+                                    `Tornar "${u.nome}" editor? Ele(a) poderá editar e excluir entrevistas já salvas.`
+                                  )}
+                                >
+                                  Tornar editor
+                                </Button>
+                              )}
+                              {u.role === 'editor' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={salvando === u.id}
+                                  onClick={() => mudarPapel(
+                                    u, 'comum',
+                                    `Remover o papel de editor de "${u.nome}"? Ele(a) deixará de poder editar e excluir entrevistas.`
+                                  )}
+                                >
+                                  Remover editor
+                                </Button>
+                              )}
+                              {u.role !== 'admin' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={salvando === u.id}
+                                  onClick={() => mudarPapel(
+                                    u, 'admin',
+                                    `Tornar "${u.nome}" administrador? Ele(a) passará a ter acesso total, inclusive a esta tela.`
+                                  )}
+                                >
+                                  Tornar admin
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="outline"
